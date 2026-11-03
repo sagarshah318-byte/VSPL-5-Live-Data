@@ -92,6 +92,14 @@ def main():
         state.update(json.loads(STATE_FILE.read_text(encoding="utf-8")))
 
     posts = fetch_posts(bearer, state.get("since_id"))
+    if state.get("since_id") is None:
+        if posts:
+            state["since_id"] = max(posts, key=lambda p: int(p["id"]))["id"]
+            STATE_FILE.write_text(json.dumps(state, indent=2) + "\\n", encoding="utf-8")
+            print(f"First run initialized at post {state['since_id']}; no older posts sent.")
+        else:
+            print("First run found no posts; waiting for the next new post.")
+        return
     if not posts:
         print("No new Redbox posts.")
         return
